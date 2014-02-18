@@ -9,6 +9,18 @@
 
 using namespace std;
 
+//--------------------------------------------------------------
+// Configuration constants
+//--------------------------------------------------------------
+
+const char* WindowTitle = "Hello OpenGL!";
+const int WindowWidth = 640;
+const int WindowHeight = 640;
+
+//--------------------------------------------------------------
+// Shader definitions
+//--------------------------------------------------------------
+
 const char* VertexShaderString =
 "#version 330\n\
 \n\
@@ -29,24 +41,35 @@ void main()\n\
 }"
 ;
 
-static GLuint initialize_program();
-static GLuint create_program(const std::vector<GLuint> &shaderList);
+//--------------------------------------------------------------
+// Program functions
+//--------------------------------------------------------------
+
+static GLuint initialize_main_shaders();
+static GLuint create_shader_program(const std::vector<GLuint> &shaderList);
 static GLuint create_shader(GLenum eShaderType, const std::string &strShaderFile);
 static void initialize_vertex_buffer(GLuint& bufferObject);
-static void render(GLuint shaderProgram);
+static void render_scene(GLuint shaderProgram);
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 static void error_callback(int error, const char* description);
 
+//==============================================================
+// Entry point
+//==============================================================
+
 int main()
 {
+    // Initialize error handler
     glfwSetErrorCallback(error_callback);
 
+    // Initialize GLFW library
     if (!glfwInit())
     {
         exit(EXIT_FAILURE);
     }
 
-    GLFWwindow* window = glfwCreateWindow(640, 480, "Hello OpenGL!", NULL, NULL);
+    // Set up a windowed OpenGL window
+    GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle, NULL, NULL);
 
     if (!window)
     {
@@ -54,42 +77,56 @@ int main()
         exit(EXIT_FAILURE);
     }
 
+    // Configure window hookpoints
     glfwSetKeyCallback(window, key_callback);
 
+    // Initialize OpenGL by creating a context
     glfwMakeContextCurrent(window);
 
-    GLuint mainShader = initialize_program();
+    // Initialize OpenGL resources such as shaders
+    GLuint mainShader = initialize_main_shaders();
 
+    // Enter main window loop
     while (!glfwWindowShouldClose(window))
     {
-        render(mainShader);
+        render_scene(mainShader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
+    // Cleanup
     glfwDestroyWindow(window);
     glfwTerminate();
 
     return 0;
 }
 
-static GLuint initialize_program()
+//--------------------------------------------------------------
+// Shader creation
+//--------------------------------------------------------------
+
+static GLuint initialize_main_shaders()
 {
     GLuint program;
     std::vector<GLuint> shaderList;
 
+    // A shader program is a linked collection of shader objects
     shaderList.push_back(create_shader(GL_VERTEX_SHADER, VertexShaderString));
     shaderList.push_back(create_shader(GL_FRAGMENT_SHADER, FragmentShaderString));
 
-    program = create_program(shaderList);
+    // Create the "chunk" shader program
+    program = create_shader_program(shaderList);
 
+    // Clean up the shader objects used in setup, they are now
+    // part of the program in OpenGL land
     std::for_each(shaderList.begin(), shaderList.end(), glDeleteShader);
 
     return program;
 }
 
-static GLuint create_program(const std::vector<GLuint> &shaderList)
+// Shader link stage
+static GLuint create_shader_program(const std::vector<GLuint> &shaderList)
 {
     GLuint program = glCreateProgram();
 
@@ -118,6 +155,7 @@ static GLuint create_program(const std::vector<GLuint> &shaderList)
     return program;
 }
 
+// Shader compile stage
 static GLuint create_shader(GLenum eShaderType, const std::string &strShaderFile)
 {
     GLuint shader = glCreateShader(eShaderType);
@@ -151,6 +189,10 @@ static GLuint create_shader(GLenum eShaderType, const std::string &strShaderFile
     return shader;
 }
 
+//--------------------------------------------------------------
+// Triangle data
+//--------------------------------------------------------------
+
 static void initialize_vertex_buffer(GLuint& bufferObject)
 {
     const float vertexPositions[] = {
@@ -159,32 +201,52 @@ static void initialize_vertex_buffer(GLuint& bufferObject)
         -0.75f, -0.75f, 0.0f, 1.0f,
     };
 
+    // Tell OpenGL we want an object (identified by a GLuint)
     glGenBuffers(1, &bufferObject);
 
+    // Map this object to the GL_ARRAY_BUFFER object in the
+    // OpenGL context state. Copy our vertex data into the
+    // buffer, then reset the state to how it was before.
+    // Now OpenGL knows about our vertex data identified by
+    // the object.
     glBindBuffer(GL_ARRAY_BUFFER, bufferObject);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-static void render(GLuint shaderProgram)
+//--------------------------------------------------------------
+// Scene composition and pipeline
+//--------------------------------------------------------------
+
+static void render_scene(GLuint shaderProgram)
 {
     GLuint positionBufferObject;
     initialize_vertex_buffer(positionBufferObject);
 
+    // Start from black
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // We need to draw with shaders, NOT compatibility layer
     glUseProgram(shaderProgram);
 
+    // Shove our vertex buffer into the OpenGL pipeline, by
+    // telling OpenGL what format our data is in
     glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
+    // Actually interpret the vertex buffer as triangles
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
+    // Cleanup
     glDisableVertexAttribArray(0);
     glUseProgram(0);
 }
+
+//--------------------------------------------------------------
+// GLFW utilities
+//--------------------------------------------------------------
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
