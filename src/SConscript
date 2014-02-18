@@ -1,0 +1,5 @@
+Import('env')
+
+env.Append(CPPPATH=['include'])
+
+env.Program(Glob('*.cc') + Glob('adventure/*.cc'), LIBS=['glfw', 'GL', 'GLU', 'X11', 'Xxf86vm', 'Xrandr', 'pthread', 'Xi'])
