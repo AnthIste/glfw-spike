@@ -212,6 +212,10 @@ static void initialize_vertex_buffer(GLuint& bufferObject)
          0.00f,  0.50f,  0.0f,  1.0f,
          0.00f,  0.00f,  0.0f,  1.0f,
          0.50f,  0.00f,  0.0f,  1.0f,
+
+         0.00f, -0.50f,  0.0f,  1.0f,
+
+        -0.50f,  0.00f,  0.0f,  1.0f,
     };
 
     // Tell OpenGL we want an object (identified by a GLuint)
@@ -254,7 +258,7 @@ static void render_scene(GLuint shaderProgram)
     // [The glDrawArrays function can be used to draw triangles,
     // using particular buffer objects as sources for vertex data
     // and the currently bound program object.]
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 5);
 
     // Cleanup
     glDisableVertexAttribArray(0);
