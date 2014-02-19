@@ -141,13 +141,13 @@ static void render_scene(GLuint shaderProgram)
     // [Since we have two pieces of data, we have two vertex attributes. For each
     // attribute, we must call glEnableVertexAttribArray to enable that particular
     // attribute]
-    glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
-
+    //
     // [The only difference in the two calls are which attribute location to send
     // he data to and the last parameter. The last parameter is the byte offset
     // into the buffer of where the data for this attribute starts]
     // [he array takes its data from bufferObject because this was the buffer
     // object that was bound at the time that glVertexAttribPointer]
+    glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
@@ -163,6 +163,7 @@ static void render_scene(GLuint shaderProgram)
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     // Cleanup
+    glDisableVertexAttribArray(1);
     glDisableVertexAttribArray(0);
     glUseProgram(0);
 }
