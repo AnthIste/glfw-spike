@@ -37,7 +37,7 @@ const char* FragmentShaderString =
 out vec4 outputColor;\n\
 void main()\n\
 {\n\
-   outputColor = vec4(0.0f, 1.0f, 0.0f, 1.0f);\n\
+   outputColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n\
 }"
 ;
 
@@ -50,6 +50,7 @@ static GLuint create_shader_program(const std::vector<GLuint> &shaderList);
 static GLuint create_shader(GLenum eShaderType, const std::string &strShaderFile);
 static void initialize_vertex_buffer(GLuint& bufferObject);
 static void render_scene(GLuint shaderProgram);
+static void window_size_callback(GLFWwindow* window, int width, int height);
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 static void error_callback(int error, const char* description);
 
@@ -78,6 +79,7 @@ int main()
     }
 
     // Configure window hookpoints
+    glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetKeyCallback(window, key_callback);
 
     // Initialize OpenGL by creating a context
@@ -106,6 +108,9 @@ int main()
 // Shader creation
 //--------------------------------------------------------------
 
+// [GLSL shaders are compiled into shader objects that represent the code to be executed
+// for a single shader stage. These shader objects can be linked together to produce a
+// program object, which represent all of the shader code to be executed during rendering.]
 static GLuint initialize_main_shaders()
 {
     GLuint program;
@@ -193,22 +198,31 @@ static GLuint create_shader(GLenum eShaderType, const std::string &strShaderFile
 // Triangle data
 //--------------------------------------------------------------
 
+// Vertex data specified as (x, y, z, w).
+// Z must be constrained between [-1, 1].
+// W must be 1.0 for the time being.
+// The origin (0, 0, 0) is at the center of the screen,
+// and (-1.0, -1.0, 0), (1.0, 1.0, 0) are the opposing
+// corners. The y-axis scales bottom-to-top, and the
+// x-axis scales left-to-right (like a math graph with
+// the origin at the center of a piece of paper)
 static void initialize_vertex_buffer(GLuint& bufferObject)
 {
     const float vertexPositions[] = {
-        0.75f, 0.75f, 0.0f, 1.0f,
-        0.75f, -0.75f, 0.0f, 1.0f,
-        -0.75f, -0.75f, 0.0f, 1.0f,
+         0.00f,  0.50f,  0.0f,  1.0f,
+         0.00f,  0.00f,  0.0f,  1.0f,
+         0.50f,  0.00f,  0.0f,  1.0f,
     };
 
     // Tell OpenGL we want an object (identified by a GLuint)
+    // [Buffer objects are linear arrays of memory allocated by OpenGL.
+    // They can be used to store vertex data.]
     glGenBuffers(1, &bufferObject);
 
     // Map this object to the GL_ARRAY_BUFFER object in the
     // OpenGL context state. Copy our vertex data into the
     // buffer, then reset the state to how it was before.
-    // Now OpenGL knows about our vertex data identified by
-    // the object.
+    // Now OpenGL knows about our vertex data identified by the object.
     glBindBuffer(GL_ARRAY_BUFFER, bufferObject);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -237,6 +251,9 @@ static void render_scene(GLuint shaderProgram)
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
     // Actually interpret the vertex buffer as triangles
+    // [The glDrawArrays function can be used to draw triangles,
+    // using particular buffer objects as sources for vertex data
+    // and the currently bound program object.]
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
     // Cleanup
@@ -247,6 +264,11 @@ static void render_scene(GLuint shaderProgram)
 //--------------------------------------------------------------
 // GLFW utilities
 //--------------------------------------------------------------
+
+static void window_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, (GLsizei) width, (GLsizei) height);
+}
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
