@@ -21,6 +21,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "shader_utils.h"
+
 using namespace std;
 
 //--------------------------------------------------------------
@@ -35,29 +37,8 @@ const int WindowHeight = 640;
 // Shader definitions
 //--------------------------------------------------------------
 
-// Input: 1 vertex
-// Output: 1 vertex
-const char* VertexShaderString =
-"#version 330\n\
-\n\
-layout(location = 0) in vec4 position;\n\
-void main()\n\
-{\n\
-    gl_Position = position;\n\
-}"
-;
-
-// Input: defined automatically, unused
-// Output: 1 color coordinate
-const char* FragmentShaderString =
-"#version 330\n\
-\n\
-out vec4 outputColor;\n\
-void main()\n\
-{\n\
-   outputColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n\
-}"
-;
+const char* VertexShaderFilename = "shaders/vertex/basic.glsl";
+const char* FragmentShaderFilename = "shaders/fragment/basic.glsl";
 
 //--------------------------------------------------------------
 // Program function declarations
@@ -184,8 +165,8 @@ static GLuint initialize_main_shaders()
     std::vector<GLuint> shaderList;
 
     // A shader program is a linked collection of shader objects
-    shaderList.push_back(create_shader(GL_VERTEX_SHADER, VertexShaderString));
-    shaderList.push_back(create_shader(GL_FRAGMENT_SHADER, FragmentShaderString));
+    shaderList.push_back(create_shader(GL_VERTEX_SHADER, load_shader_from_file(VertexShaderFilename)));
+    shaderList.push_back(create_shader(GL_FRAGMENT_SHADER, load_shader_from_file(FragmentShaderFilename)));
 
     // Create the "chunk" shader program
     program = create_shader_program(shaderList);
