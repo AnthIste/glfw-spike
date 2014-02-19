@@ -37,8 +37,8 @@ const int WindowHeight = 640;
 // Shader definitions
 //--------------------------------------------------------------
 
-const char* VertexShaderFilename = "shaders/vertex/basic.glsl";
-const char* FragmentShaderFilename = "shaders/fragment/basic.glsl";
+const char* VertexShaderFilename = "shaders/vertex/multiinput.glsl";
+const char* FragmentShaderFilename = "shaders/fragment/multiinput.glsl";
 
 //--------------------------------------------------------------
 // Program function declarations
@@ -130,13 +130,28 @@ static void render_scene(GLuint shaderProgram)
 
     // Shove our vertex buffer into the OpenGL pipeline, by
     // telling OpenGL what format our data is in
+    //
+    // Position:
     // [These functions control vertex attribute arrays. glEnableVertexAttribArray
     // activates the given attribute index, glDisableVertexAttribArray deactivates
     // the given attribute index, and glVertexAttribPointer defines the format and
     // source location (buffer object) of the vertex data.]
+    //
+    // Colors:
+    // [Since we have two pieces of data, we have two vertex attributes. For each
+    // attribute, we must call glEnableVertexAttribArray to enable that particular
+    // attribute]
     glBindBuffer(GL_ARRAY_BUFFER, positionBufferObject);
+
+    // [The only difference in the two calls are which attribute location to send
+    // he data to and the last parameter. The last parameter is the byte offset
+    // into the buffer of where the data for this attribute starts]
+    // [he array takes its data from bufferObject because this was the buffer
+    // object that was bound at the time that glVertexAttribPointer]
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)(sizeof(GLfloat) * 4 * 3));
 
     // Actually interpret the vertex buffer as triangles
     // [The glDrawArrays function can be used to draw triangles,
@@ -145,7 +160,7 @@ static void render_scene(GLuint shaderProgram)
     // [This function initiates rendering, using the currently active vertex
     // attributes and the current program object (among other state). It causes
     // a number of vertices to be pulled from the attribute arrays in order.]
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 5);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 
     // Cleanup
     glDisableVertexAttribArray(0);
@@ -279,17 +294,16 @@ static GLuint create_shader(GLenum eShaderType, const std::string &strShaderFile
 static GLuint initialize_vertex_buffer()
 {
     GLuint bufferObject;
-    const float vertexPositions[] = {
-         // Vertex 1-3 (x, y, z) - creates triangle
-         0.00f,  0.50f,  0.0f,  1.0f,
-         0.00f,  0.00f,  0.0f,  1.0f,
-         0.50f,  0.00f,  0.0f,  1.0f,
+    const float vertexData[] = {
+        // Triangle data:
+         0.0f,    0.5f, 0.0f, 1.0f, // (Vec4)
+         0.5f, -0.366f, 0.0f, 1.0f, // (Vec4)
+        -0.5f, -0.366f, 0.0f, 1.0f, // (Vec4)
 
-         // Vertex 4 (x, y, z) - extends fan
-         0.00f, -0.50f,  0.0f,  1.0f,
-
-         // Vertex 5 (x, y, z) - extends fan
-        -0.50f,  0.00f,  0.0f,  1.0f,
+        // Color data:
+         1.0f,    0.0f, 0.0f, 1.0f, // (Vec4)
+         0.0f,    1.0f, 0.0f, 1.0f, // (Vec4)
+         0.0f,    0.0f, 1.0f, 1.0f, // (Vec4)
     };
 
     // Tell OpenGL we want an object (identified by a GLuint)
@@ -306,7 +320,7 @@ static GLuint initialize_vertex_buffer()
     // to a location in the context, and glBufferData allocates memory and
     // fills this memory with data from the user into the buffer object.]
     glBindBuffer(GL_ARRAY_BUFFER, bufferObject);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     return bufferObject;
